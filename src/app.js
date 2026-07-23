@@ -53,6 +53,9 @@ app.use('/api', limiter);
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok', env: config.env }));
 
+// Welcome
+app.get('/', (_req, res) => res.json({ message: 'Welcome to Boilerplate API', version: '1.0.0', status: 'running' }));
+
 // API routes
 app.use('/api/v1', routes);
 
