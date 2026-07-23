@@ -1,10 +1,12 @@
+import { config } from "dotenv";
+import { resolve } from "path";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema/index.js";
 
-const DATABASE_URL =
-  "postgresql://neondb_owner:npg_MVhksRaIQ51v@ep-shy-fire-axaullnp-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
-const sql = neon(DATABASE_URL);
+config({ path: resolve(process.cwd(), ".env") });
+
+const sql = neon(process.env.DATABASE_URL);
 const db = drizzle(sql, { schema });
 
 const OWNER_ID = "edc7cb22-bd3b-4cef-b6b1-4d1c2c1c4911";
