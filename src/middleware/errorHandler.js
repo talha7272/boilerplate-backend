@@ -1,4 +1,3 @@
-import logger from '../utils/logger.js';
 import { HTTP_STATUS } from '../constants/httpStatus.js';
 
 export class AppError extends Error {
@@ -14,12 +13,12 @@ export const notFound = (req, _res, next) => {
   next(new AppError(`Route not found: ${req.originalUrl}`, HTTP_STATUS.NOT_FOUND));
 };
 
-export const errorHandler = (err, req, res, _next) => {
+export const errorHandler = (err, _req, res, _next) => {
   const statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (!err.isOperational) {
-    logger.error('Unexpected error:', { error: err.message, stack: err.stack, url: req.originalUrl });
+    console.error('Unexpected error:', err);
   }
 
   res.status(statusCode).json({

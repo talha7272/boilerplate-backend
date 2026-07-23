@@ -5,7 +5,6 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
 import config from './config/env.js';
-import logger from './utils/logger.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 
@@ -35,7 +34,6 @@ app.use(express.urlencoded({ extended: true }));
 // HTTP request logging
 app.use(
   morgan('combined', {
-    stream: { write: (msg) => logger.http(msg.trim()) },
     skip: () => config.env === 'test',
   })
 );

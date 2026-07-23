@@ -31,12 +31,5 @@ for (const key of required) {
   }
 }
 
-console.log('✅ ENV loaded:', {
-  NODE_ENV: config.env,
-  PORT: config.port,
-  DATABASE_URL: config.db.url ? `${config.db.url.slice(0, 30)}...` : 'MISSING',
-  JWT_SECRET: config.jwt.secret ? '✓ set' : 'MISSING',
-  CORS_ORIGINS: config.cors.origins,
-});
 
 export default config;
