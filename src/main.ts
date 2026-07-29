@@ -18,6 +18,8 @@ export async function createApp() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService<AppConfig, true>);
 
+  app.set('trust proxy', 1);
+
   app.use(helmet());
 
   app.use(express.json({ limit: '10kb' }));
