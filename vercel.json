@@ -17,8 +17,8 @@
         "PATCH",
         "DELETE",
         "OPTIONS"
-      ],
-      "outputDirectory": "dist"
+      ]
     }
-  ]
+  ],
+  "outputDirectory": "dist"
 }
