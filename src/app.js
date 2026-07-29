@@ -1,12 +1,12 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import rateLimit from "express-rate-limit";
 
-import config from './config/env.js';
-import { errorHandler, notFound } from './middleware/errorHandler.js';
-import routes from './routes/index.js';
+import config from "./config/env.js";
+import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import routes from "./routes/index.js";
 
 const app = express();
 
@@ -24,18 +24,18 @@ app.use(
       callback(new Error(`CORS: origin ${origin} is not allowed`));
     },
     credentials: true,
-  })
+  }),
 );
 
 // Request body parsing
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // HTTP request logging
 app.use(
-  morgan('combined', {
-    skip: () => config.env === 'test',
-  })
+  morgan("combined", {
+    skip: () => config.env === "test",
+  }),
 );
 
 // Global rate limiter
@@ -44,18 +44,27 @@ const limiter = rateLimit({
   max: config.rateLimit.max,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: 'Too many requests, please try again later.' },
+  message: {
+    success: false,
+    message: "Too many requests, please try again later.",
+  },
 });
-app.use('/api', limiter);
+app.use("/api", limiter);
 
 // Health check
-app.get('/health', (_req, res) => res.json({ status: 'ok', env: config.env }));
+app.get("/health", (_req, res) => res.json({ status: "ok", env: config.env }));
 
 // Welcome
-app.get('/', (_req, res) => res.json({ message: 'Welcome to Boilerplate API', version: '1.0.0', status: 'running' }));
+app.get("/", (_req, res) =>
+  res.json({
+    message: "Welcome to Boilerplate API express application",
+    version: "1.0.0",
+    status: "running",
+  }),
+);
 
 // API routes
-app.use('/api/v1', routes);
+app.use("/api/v1", routes);
 
 // 404 + global error handler
 app.use(notFound);
