@@ -2,21 +2,30 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { eq } from 'drizzle-orm';
+import crypto from 'crypto';
+import { eq, and, gt } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDb } from '../../db/drizzle.module';
 import { users } from '../../db/schema';
 import { AppException } from '../../common/exceptions/app.exception';
 import { HTTP_STATUS } from '../../constants/http-status';
 import { AppConfig } from '../../config/configuration';
+import { EmailService } from '../../common/email/email.service';
 
 const SALT_ROUNDS = 12;
+const RESET_TOKEN_BYTES = 32;
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDb,
     private readonly configService: ConfigService<AppConfig, true>,
+    private readonly emailService: EmailService,
   ) {}
+
+  private hashResetToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
 
   private signToken(user: { id: string; email: string }): string {
     const secret: jwt.Secret = this.configService.get('jwt.secret', { infer: true });
@@ -90,5 +99,48 @@ export class UserService {
 
     if (!user) throw new AppException('User not found', HTTP_STATUS.NOT_FOUND);
     return user;
+  }
+
+  async forgotPassword({ email }: { email: string }) {
+    const [user] = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
+
+    if (user) {
+      const rawToken = crypto.randomBytes(RESET_TOKEN_BYTES).toString('hex');
+      const tokenHash = this.hashResetToken(rawToken);
+      const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+
+      await this.db
+        .update(users)
+        .set({ passwordResetTokenHash: tokenHash, passwordResetExpiresAt: expiresAt })
+        .where(eq(users.id, user.id));
+
+      const frontendUrl = this.configService.get('frontendUrl', { infer: true });
+      const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+      await this.emailService.sendPasswordResetEmail(user.email, resetUrl);
+    }
+
+    return null;
+  }
+
+  async resetPassword({ token, newPassword }: { token: string; newPassword: string }) {
+    const tokenHash = this.hashResetToken(token);
+
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(and(eq(users.passwordResetTokenHash, tokenHash), gt(users.passwordResetExpiresAt, new Date())))
+      .limit(1);
+
+    if (!user) throw new AppException('Invalid or expired reset token', HTTP_STATUS.BAD_REQUEST);
+
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    await this.db
+      .update(users)
+      .set({ password: hashedPassword, passwordResetTokenHash: null, passwordResetExpiresAt: null })
+      .where(eq(users.id, user.id));
+
+    return null;
   }
 }

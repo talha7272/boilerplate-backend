@@ -15,9 +15,14 @@ export interface AppConfig {
   cors: {
     origins: string[];
   };
+  email: {
+    resendApiKey: string;
+    from: string;
+  };
+  frontendUrl: string;
 }
 
-const required = ['DATABASE_URL', 'JWT_SECRET'];
+const required = ['DATABASE_URL', 'JWT_SECRET', 'RESEND_API_KEY', 'EMAIL_FROM', 'FRONTEND_URL'];
 
 export default (): AppConfig => {
   for (const key of required) {
@@ -49,5 +54,12 @@ export default (): AppConfig => {
         .split(',')
         .map((o) => o.trim()),
     },
+
+    email: {
+      resendApiKey: process.env.RESEND_API_KEY as string,
+      from: process.env.EMAIL_FROM as string,
+    },
+
+    frontendUrl: process.env.FRONTEND_URL as string,
   };
 };

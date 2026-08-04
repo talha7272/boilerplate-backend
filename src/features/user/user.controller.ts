@@ -4,6 +4,8 @@ import { UserService } from './user.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { sendSuccess, sendCreated } from '../../common/utils/response';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import type { AuthenticatedRequest } from '../../common/types/authenticated-request';
@@ -36,6 +38,18 @@ export class UserController {
   async refresh(@Body() dto: RefreshDto, @Res() res: Response) {
     const data = await this.userService.refreshToken(dto.refreshToken);
     sendSuccess(res, data, 'Token refreshed');
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Res() res: Response) {
+    const data = await this.userService.forgotPassword(dto);
+    sendSuccess(res, data, 'If an account with that email exists, a password reset link has been sent.');
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto, @Res() res: Response) {
+    const data = await this.userService.resetPassword(dto);
+    sendSuccess(res, data, 'Password has been reset successfully.');
   }
 
   @Get('me')

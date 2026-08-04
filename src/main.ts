@@ -13,6 +13,7 @@ import { GlobalExceptionFilter } from "./common/filters/global-exception.filter"
 import { AppException } from "./common/exceptions/app.exception";
 import { HTTP_STATUS } from "./constants/http-status";
 import { AppConfig } from "./config/configuration";
+import { passwordResetRateLimit } from "./common/middleware/auth-rate-limit";
 
 export async function createApp() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -55,6 +56,8 @@ export async function createApp() {
     },
   });
   app.use("/api", limiter);
+  app.use("/api/v1/auth/forgot-password", passwordResetRateLimit);
+  app.use("/api/v1/auth/reset-password", passwordResetRateLimit);
 
   app.useGlobalPipes(
     new ValidationPipe({
